@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns     = "http://www.w3.org/ns/widgets"
+        xmlns:gap = "http://phonegap.com/ns/1.0"
+        id        = "com.webdoc.tkab"
+        version   = "1.0.0">
+    <name>Tågkompaniet</name>
+
+    <description>
+        Boka dina biljetter direkt i appen
+    </description>
+
+    <author href="http://www.tagkompaniet.se" email="info@tagkompaniet.se">
+        tagkompaniet.se - cavagentcms.se
+    </author>
+
+    <access origin="*" />
+
+    <feature name="http://api.phonegap.com/1.0/device" />
+    <feature name="http://api.phonegap.com/1.0/camera"/>
+    <feature name="http://api.phonegap.com/1.0/file"/>
+    <feature name="http://api.phonegap.com/1.0/geolocation"/>
+    <feature name="http://api.phonegap.com/1.0/media"/>
+    <feature name="http://api.phonegap.com/1.0/network"/>
+
+    <preference name="phonegap-version" value="2.2.0" />
+    <preference name="orientation"      value="default" />
+    <preference name="target-device"    value="universal" />
+    <preference name="fullscreen"       value="false" />
+
+    <icon src="icon.png" />
+    
+
+    
+
+</widget>
