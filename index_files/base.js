@@ -52,7 +52,9 @@ $('.sitebtn').click(function () {
 });
 
 //$(window).bind('facebookLoaded', function () {
+    document.addEventListener('deviceready', function() {
 FB.init({ appId: "133914256793487", nativeInterface: CDV.FB, useCachedDialogs: false });
+},false);
     /*FB.init({
         appId: window.FBid, // App ID
         channelUrl: '//tkab.wd7dev.se/channel.html', // Channel File
@@ -105,7 +107,7 @@ $(window).resize(function () {
 });
 if (windowwidth > 767) {
     shopOpt.dontCloseCartOnClick = 0;
-    console.log(windowwidth);
+    //console.log(windowwidth);
     var lastPos = 0;
     //var isScrolling = false;
     var scrollT;
@@ -623,8 +625,6 @@ $('#loginpop .button').click(function () {
     $('#ctl00_Login1').click();
 });
 
-setTimeout(function() {
-    loadFB();
-}, 600);
+
 
 fd('base.js');
