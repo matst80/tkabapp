@@ -36,7 +36,7 @@
 
     <gap:plugin name="com.phonegap.plugins.facebookconnect">
     <param name="APP_ID" value="203948563103036" />
-    <param name="APP_NAME" value="com_tkab_web" />
+    
 </gap:plugin>
     
 
