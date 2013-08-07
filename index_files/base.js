@@ -46,15 +46,13 @@ var svcUrl = 'http://tkab.wd7dev.se/tripfinder.asmx/',
     windowwidth = $(window).width(),
     windowheight = $(window).height();
 
-$('.sitebtn').click(function () {
-    $(this).toggleClass('active');
-    $('#togglefoot').toggleClass('open');
-});
+
+
+
+
 
 //$(window).bind('facebookLoaded', function () {
-    document.addEventListener('deviceready', function() {
-FB.init({ appId: "133914256793487", nativeInterface: CDV.FB, useCachedDialogs: false });
-},false);
+
     /*FB.init({
         appId: window.FBid, // App ID
         channelUrl: '//tkab.wd7dev.se/channel.html', // Channel File
@@ -100,6 +98,14 @@ shopOpt.customCartRow = function (data, info, t) {
         }
     }
 };
+
+ document.addEventListener('deviceready', function() {
+FB.init({ appId: "133914256793487", nativeInterface: CDV.FB, useCachedDialogs: false });
+$('.sitebtn').click(function () {
+    $(this).toggleClass('active');
+    $('#togglefoot').toggleClass('open');
+});
+
 
 $(window).resize(function () {
     windowwidth = $(window).width();
@@ -213,42 +219,10 @@ $('input#travelback').change(function () {
     //else
     //    $('.returnwrap').slideUp();
 });
-//$('#mtravelback input').click(function () {
-//    if ($(this)) {
-//        $(this).toggleClass('active');
-//        $('.returnwrap').slideDown();
-//        var checkBox = $('input#mtravelback');
-//        checkBox.prop('checked', !checkBox.prop('checked'));
-//        setMobileReturnDate(new Date());
-//    }
-//    else
-//        $('.returnwrap').slideUp();
-
-//});
-function setButtonHeight() {
-    //var searchHeight = $('.fromto').outerHeight();
-    //searchHeight += $('.white').outerHeight();
-    var searchHeight = 0;
-    $('.middlesearch .measure').each(function () {
-        searchHeight += $(this).outerHeight();
-    });
-    $('.searchbox').css('height', searchHeight);
-}
 setButtonHeight();
 $('.middlesearch ul.tabs li').click(function () {
     setButtonHeight();
 });
-/*
-$('.addtraveler').click(function () {
-    var row = $(this).prev().find('div.travelerrow').first().clone(true);
-    $($('<input type="text" placeholder="Namn" />')).appendTo(row);
-    $('<span class="delrow" />').appendTo(row);
-    $(row).insertAfter($(this).prev().find('div.travelerrow').last());
-    row.find('ul').children('li').removeClass('selected');
-    row.find('ul li').eq(0).addClass('selected');
-    setButtonHeight();
-});
-*/
 
 setTimeout(function () {
     $('.wd-cart-prod a').on('click', function (e) {
@@ -291,6 +265,42 @@ activetab();
 $('.searchwrapper ul.tabs li').click(function () {
     activetab();
 });
+
+},false);
+//$('#mtravelback input').click(function () {
+//    if ($(this)) {
+//        $(this).toggleClass('active');
+//        $('.returnwrap').slideDown();
+//        var checkBox = $('input#mtravelback');
+//        checkBox.prop('checked', !checkBox.prop('checked'));
+//        setMobileReturnDate(new Date());
+//    }
+//    else
+//        $('.returnwrap').slideUp();
+
+//});
+function setButtonHeight() {
+    //var searchHeight = $('.fromto').outerHeight();
+    //searchHeight += $('.white').outerHeight();
+    var searchHeight = 0;
+    $('.middlesearch .measure').each(function () {
+        searchHeight += $(this).outerHeight();
+    });
+    $('.searchbox').css('height', searchHeight);
+}
+
+/*
+$('.addtraveler').click(function () {
+    var row = $(this).prev().find('div.travelerrow').first().clone(true);
+    $($('<input type="text" placeholder="Namn" />')).appendTo(row);
+    $('<span class="delrow" />').appendTo(row);
+    $(row).insertAfter($(this).prev().find('div.travelerrow').last());
+    row.find('ul').children('li').removeClass('selected');
+    row.find('ul li').eq(0).addClass('selected');
+    setButtonHeight();
+});
+*/
+
 
 
 function fb_publish(d) {
