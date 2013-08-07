@@ -42,7 +42,7 @@ Number.prototype.timeSpan = function () {
     return minutes + 'm';
 };
 
-var svcUrl = '/tripfinder.asmx/',
+var svcUrl = 'http://tkab.wd7dev.se/tripfinder.asmx/',
     windowwidth = $(window).width(),
     windowheight = $(window).height();
 
@@ -51,17 +51,18 @@ $('.sitebtn').click(function () {
     $('#togglefoot').toggleClass('open');
 });
 
-$(window).bind('facebookLoaded', function () {
-
-    FB.init({
+//$(window).bind('facebookLoaded', function () {
+FB.init({ appId: "133914256793487", nativeInterface: CDV.FB, useCachedDialogs: false });
+    /*FB.init({
         appId: window.FBid, // App ID
         channelUrl: '//tkab.wd7dev.se/channel.html', // Channel File
         status: true, // check login status
         cookie: true, // enable cookies to allow the server to access the session
         xfbml: true  // parse XFBML
     });
+*/
 
-});
+//});
 
 
 shopOpt.customCartRow = function (data, info, t) {
