@@ -28,6 +28,11 @@
     <preference name="fullscreen"       value="false" />
 
     <icon src="icon.png" />
+
+    <gap:plugin name="com.phonegap.plugins.facebookconnect">
+    <param name="APP_ID" value="203948563103036" />
+    <param name="APP_NAME" value="Tågkompaniet AB" />
+</gap:plugin>
     
 
     
