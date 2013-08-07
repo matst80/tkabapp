@@ -82,18 +82,57 @@ function getTravellers(parent) {
     return ret;
 }
 
+function noiTrav(d,t) {
+    var r = 0;
+    $.each(d, function(i, v) {
+        if (v.Type == t)
+            r++;
+    });
+    return r;
+}
+
 function calcPrice(p) {
     var ret = 0;
-    $.each(getTravellers(), function (i, v) {
+    var trav = getTravellers();
+    var full = noiTrav(trav, 1);
+    var child = 0;
+    $.each(trav, function (i, v) {
         if (v.Type == 1) {
             ret += p.Full;
         }
-        else if (v.Type == 2) {
+        else if (v.Type == 3) {
+            if (child < full * 2) {
+                ret += 5;
+            } else {
+                ret += p.Youth;
+            }
+            child++;
+        } else if (v.Type == 4) {
+            
+            ret += p.Youth;
+            
+        } else if (v.Type == 2) {
             ret += p.Youth;
         }
     });
     return ret;
 }
+
+function prebuy(o) {
+    o.addClass('buying');
+    $('#pageload').show();
+}
+
+function afterbuy(o) {
+    wdShop.orderChanged();
+    o.removeClass('buying').addClass('incart');
+    $('#pageload').hide();
+    if (windowwidth < 768)
+        $('body').removeClass('menuopen').addClass('cartopen').scrollTop(0);
+    else
+        window.location.href = '/checkout';
+}
+
 
 function appendTrip(t, tc) {
     var tot = 0,
@@ -151,18 +190,17 @@ function appendTrip(t, tc) {
                 map.fitBounds(bounds);
             }
         }).appendTo(tc);
-
+    //console.log(t);
     var changes = t.TotalChanges - 1,
         title = $('<div class="triphead"><span class="starttime">' + t.StartTime.format('HH:MM') + '</span><span class="timeto"></span><span class="arrivetime">' + t.EndTime.format('HH:MM') + '</span><span class="changes">' + changes + '</span><span class="traveltime">' + t.TotalTime.Hours + 'h ' + t.TotalTime.Minutes + 'min</span></div>').appendTo(cnt),
-        travelfrom = $('input#from').val().short(),
-        travelto = $('input#to').val().short(),
+        travelfrom = station[t.fromId].n.short(),//$('input#from').val().short(),
+        travelto = station[t.toId].n.short(), //$('input#to').val().short(),
         tottime = t.TotalTime.TotalMinutes;
 
-    $travelfrom.empty().append(travelfrom + ' - ' + travelto);
-    $backtravelfrom.empty().append(travelto + ' - ' + travelfrom);
+    
 
     //Längsta resa
-
+    
 
     var prc = $('<span class="tprice" />').appendTo(title),
         icnt = $('<div class="subtrips flip" />').click(function (e) {
@@ -180,11 +218,21 @@ function appendTrip(t, tc) {
 
         sel = $('<input type="radio" name="' + tc.attr('id') + '" value="' + t.uid + '" />').click(function (e) {
             e.stopPropagation();
+            $('#buytrip').addClass('active');
+            if(windowwidth > 768)
+                $('body').scrollTo($('#buytrip').offset().top - 200, 200);
+            else
+                $('body').scrollTo($('#buytrip').offset().top - 50, 200);
+            
         }).appendTo(owncnt),
         buy = $('<div class="bookbutton" />').text('Köp direkt').click(function (e) {
+            prebuy(buy);
+            
             ar(svcUrl + 'BookTrip', { tripid: t.uid, noi: 1, from: t.fromId, to: t.toId, type: 1, ttype: 1, startdate: commuterdate, traveller: getTravellers(), fullflex: false }, function (d) {
-                window.location.href = '/checkout';
-                wdShop.orderChanged();
+                //window.location.href = '/checkout';
+                //$('body').removeClass('menuopen').addClass('cartopen').scrollTop(0);
+                //wdShop.orderChanged();
+                afterbuy(buy);
             });
             e.stopPropagation();
         }).appendTo(owncnt),
@@ -310,6 +358,9 @@ function findto(from, to) {
     $commutercnt.removeClass('slideappear');
     $multicnt.removeClass('slideappear');
 
+    $travelfrom.empty().append(station[from].n.short() + ' - ' + station[to].n.short());
+    
+    
     ar(svcUrl + 'FindTrips', { from: from, to: to, when: date }, function (d) {
         tccnt.empty();
         $('#basetrip').addClass('showload');
@@ -338,6 +389,8 @@ function findto(from, to) {
 
 function setTripData(sTime, cnt, i, arr) {
     var v = cnt.data('data');
+    //cnt.parents('.tripparent').find('.prevtimes').show();
+    //cnt.parents('.tripparent').find('.nexttimes').show();
     var inmin = v[arr ? 'EndTime' : 'StartTime'].inmin();
     
     if ((!arr && sTime < inmin && (sTime + (6 * 60) > inmin)) || (arr && (sTime + (3 * 60)) > inmin)) {
@@ -352,13 +405,23 @@ function setTripData(sTime, cnt, i, arr) {
     } else {
         cnt.removeClass('appeared').removeClass('passedtime');
         if (sTime < inmin) {
-            cnt.parents('.tripparent').find('.prevtimes').show();
+            
             cnt.addClass('posttime').removeClass('pretime');
         } else {
-            cnt.parents('.tripparent').find('.nexttimes').show();
+            
             cnt.addClass('pretime').removeClass('posttime');
         }
     }
+    var hasprev = !!cnt.parent().find('.pretime').length;
+    var hasnext = !!cnt.parent().find('.posttime').length;
+    
+    cnt.parents('.tripparent').find('.prevtimes').toggle(hasprev);
+    cnt.parents('.tripparent').find('.nexttimes').toggle(hasnext);
+
+    if (!hasprev && !hasnext) {
+
+    }
+
     cnt.data('inmin', inmin);
 }
 
@@ -367,14 +430,15 @@ function setTripData(sTime, cnt, i, arr) {
 
 function findreturn(from, to) {
     returncnt.find('.trip').removeClass('appeared');
+    $backtravelfrom.empty().append(station[to].n.short() + ' - ' + station[from].n.short());
     ar(svcUrl + 'FindTrips', { from: to, to: from, when: returndate }, function (d) {
         returncnt.empty();
         $('#returntrip').addClass('showload');
         var mt = 0;
         var it = 0;
         $.each(d.Result, function (i, v) {
-            v.fromId = from;
-            v.toId = to;
+            v.fromId = to;
+            v.toId = from;
             if (v.TotalTime.TotalMinutes > mt)
                 mt = v.TotalTime.TotalMinutes;
             var cnt = appendTrip(v, returncnt);
@@ -486,7 +550,7 @@ function getDist(x, y, x2, y2) {
 }
 
 if (navigator.geolocation) {
-    if (!lastdata || !lastdata.from)
+    if (windowwidth<768 || (!lastdata || !lastdata.from))
         navigator.geolocation.getCurrentPosition(function (d) {
 
             var x2 = d.coords.longitude,
@@ -503,7 +567,9 @@ if (navigator.geolocation) {
             });
 
             $from.data('station-id', dist[0].id).val(dist[0].n);
-
+            if (lastdata || lastdata.to) {
+                findtrip(true, false);
+            }
         });
 }
 
@@ -560,16 +626,16 @@ $('.addtraveler').click(function () {
 
     var row = $(this).prev().find('div.travelerrow').first().clone(true);
     $($('<input type="text" placeholder="Namn" />')).appendTo(row);
-    $('<span class="delrow" />').appendTo(row);
+    var delrow = $('<span class="delrow" />');
+    $(delrow).bind('click', function () {
+        $(this).parent('div').remove();
+        setButtonHeight();
+        findtrip(true, true);
+    });
+    $(delrow).appendTo(row);
     $(row).insertAfter($(this).prev().find('div.travelerrow').last());
     //row.find('ul').children('li').removeClass('selected');
     //row.find('ul li').eq(0).addClass('selected');
-    setButtonHeight();
-
-    findtrip(true, true);
-});
-$('span.delrow').live('click', function () {
-    $(this).parent('div').remove();
     setButtonHeight();
     findtrip(true, true);
 });
@@ -608,23 +674,35 @@ $("#trainsearch").change(function () {
     }
 });
 
+
 $('.buycom').click(function () {
     var trav = { Type: $(this).data('age') - 0, Name: '' };
-
+    prebuy($(this));
+    var t = $(this);
     ar(svcUrl + 'BookTrip', { tripid: baseTrip.uid, noi: 1, from: baseTrip.fromId, to: baseTrip.toId, type: 3, ttype: 3, startdate: commuterdate, traveller: [trav], fullflex: false }, function (d) {
-        //window.location.href = '/checkout';
-        $('body').removeClass('menuopen').addClass('cartopen').scrollTop(0);
-        wdShop.orderChanged();
+        //if (windowwidth < 768)
+        //    $('body').removeClass('menuopen').addClass('cartopen').scrollTop(0);
+        //else
+        //    window.location.href = '/checkout';
+        //wdShop.orderChanged();
+        afterbuy(t);
     });
 });
 
 $('.multiprice').click(function () {
     //var mul = $(this).data('mul') - 0;
+    prebuy($(this));
+    var t = $(this);
     var noi = $(this).data('noi') - 0;
     ar(svcUrl + 'BookTrip', { tripid: baseTrip.uid, noi: noi, from: baseTrip.fromId, to: baseTrip.toId, type: 2, ttype: 2, startdate: commuterdate, traveller: getTravellers('#multitraveler'), fullflex: true }, function (d) {
+        
         //window.location.href = '/checkout';
-        $('body').removeClass('menuopen').addClass('cartopen').scrollTop(0);
-        wdShop.orderChanged();
+        //if (windowwidth < 768)
+        //    $('body').removeClass('menuopen').addClass('cartopen').scrollTop(0);
+        //else
+        //    window.location.href = '/checkout';
+        //wdShop.orderChanged();
+        afterbuy(t);
     });
 });
 /*
@@ -642,27 +720,25 @@ $('#travelback').change(function () {
 });
 
 
-$('input[name="tripresult"]').live('change', function () {
-    $('#buytrip').addClass('active');
-});
+
 $('#buytrip').click(function () {
+    var t = $(this);
     var tripid = $('input[name="tripresult"]:checked').val();
     var returntripid = $('input[name="returnresult"]:checked').val();
     var trav = getTravellers();
+    prebuy(t);
     ar(svcUrl + 'BookTrip', { tripid: tripid, noi: 1, from: baseTrip.fromId, to: baseTrip.toId, type: 1, ttype: 1, startdate: commuterdate, traveller: trav, fullflex: false }, function (d) {
         if (d) {
             if (returntripid) {
                 ar(svcUrl + 'BookTrip', { tripid: returntripid, noi: 1, from: baseTrip.toId, to: baseTrip.fromId, type: 1, ttype: 1, startdate: commuterdate, traveller: trav, fullflex: false }, function (d2) {
                     if (d2) {
-                        $('body').removeClass('menuopen').addClass('cartopen').scrollTop(0);
-                        window.location.href = '/checkout';
+                        afterbuy(t);
                     } else {
                         showmessage('Återresan kunde inte bokas');
                     }
                 });
             } else {
-                $('body').removeClass('menuopen').addClass('cartopen').scrollTop(0);
-                window.location.href = '/checkout';
+                afterbuy(t);
             }
         } else {
             showmessage('Resan kunde inte bokas');
@@ -727,8 +803,10 @@ var useBrowser = nav.indexOf('Chrome/') != -1 || nav.indexOf('iPhone') != -1 || 
 var useNativeInput = (isIPad || (windowwidth < 768 && useBrowser));
 
     $('.asdate').each(function () {
-        
-        this.type = 'date';
+        try {
+            this.type = 'date';
+        }
+        catch (e) { }
         if (this.type == 'date' && useNativeInput) {
             if ($(this).hasClass('hiddeninp')) {
                 $(this).css({ overflow: 'auto', position: 'absolute', color: 'transparent', backgroundColor: 'transparent', border: '0' }).removeClass('hiddeninp').show();
@@ -740,7 +818,10 @@ var useNativeInput = (isIPad || (windowwidth < 768 && useBrowser));
 
     $('.astime').each(function () {
         
-        this.type = 'time';
+        try {
+            this.type = 'time';
+        }
+        catch (e) { }
         if (this.type == 'time' && useNativeInput) {
             if ($(this).hasClass('hiddeninp')) {
                 $(this).css({ overflow: 'auto', position: 'absolute', color: 'transparent', backgroundColor: 'transparent', border: '0' }).removeClass('hiddeninp').show();
@@ -830,7 +911,8 @@ $tripday.weeksel({
     onchange: function (nd) {
         date = nd;
         setDate($('.mobiledate'), date);
-        $('#when').datepicker('setDate', date);
+        $when.val(date.format('yyyy-mm-dd')).change();
+        //$('#when').val('setDate', date);
         findtrip(true, false);
     }
 });
@@ -839,7 +921,8 @@ $returnday.weeksel({
     onchange: function (nd) {
         returndate = nd;
         setDate($('.showdate'), returndate);
-        $('#whento').datepicker('setDate', returndate);
+        //$('#whento').datepicker('setDate', returndate);
+        $return.val(returndate.format('yyyy-mm-dd')).change();
         findtrip(false, true);
     }
 });
@@ -863,6 +946,10 @@ $when.change(function () {
     date = new Date($(this).val());
     setDate($('.mobiledate'), date);
     $tripday.trigger('changeday', [date]);
+
+    if (returndate < date) {
+        $return.val(date.format('yyyy-mm-dd')).change();
+    }
     findtrip(true, false);
 });
 
@@ -886,8 +973,11 @@ if ($return.hasClass('notnative')) {
 }
 $return.change(function () {
     returndate = new Date($(this).val());
-    setDate($('.mobiledate'), returndate);
+    setDate($('.returnwrap'), returndate);
     $returnday.trigger('changeday', [returndate]);
+    if (returndate < date) {
+        $when.val(returndate.format('yyyy-mm-dd')).change();
+    }
     findtrip(false, true);
 });
 
@@ -898,12 +988,15 @@ function setDate(parent, date) {
     parent.find('.myear').text(1900 + date.getYear());
 }
 
+$when.click(function (e) { e.stopPropagation(); });
+$return.click(function (e) { e.stopPropagation(); });
 
-$('.dateclick').click(function (e) {
-    console.log(e);
-    if (e.srcElement)
+$('.dateclick').bind('click touchstart',function (e) {
+    console.log("click");
+    e.stopPropagation(); e.preventDefault();
+    if (e.target || e.srcElement) {
         $when.focus().click();
-
+    }
     //$when.datepicker('show');
 });
 
@@ -912,8 +1005,14 @@ setDate($('.mobiledate'), date);
 
 
 $('.clickreturndate').bind('click touchstart', function (e) {
-    if (e.srcElement)
-        $return.focus().click();
+    //console.log(e);
+    e.stopPropagation(); e.preventDefault();
+    if (e.target || e.srcElement) {
+        $return.focus().click(function () {
+            e.stopPropagation();
+            return false;
+        });
+    }
     //$return.datepicker('show');
 });
 /*
@@ -1029,6 +1128,12 @@ if (lastdata) {
     }, 500);
 
 }
+
+$('#otherdate').click(function () {
+    $('#daybefore').hide();
+    $('#dayafter').show();
+});
+
 setTimeout(function () {
 
     $('.searchwrapper .hideload').addClass('showload');

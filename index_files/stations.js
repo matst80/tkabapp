@@ -4,7 +4,8 @@ var slist = $(".stationlist");
 slist.each(function () {
     var cnt = $('<ul class="stpop" />').insertAfter($(this));
     $.each(station, function (i, v) {
-        $('<li data-id="' + i + '">' + v.n + '</li>').appendTo(cnt);
+        var n = windowwidth < 768 ? v.n.short() : v.n;
+        $('<li data-id="' + i + '">' + n + '</li>').appendTo(cnt);
     });
 });
 

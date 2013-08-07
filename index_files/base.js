@@ -42,9 +42,26 @@ Number.prototype.timeSpan = function () {
     return minutes + 'm';
 };
 
-var svcUrl = 'http://tkab.wd7dev.se/tripfinder.asmx/',
+var svcUrl = '/tripfinder.asmx/',
     windowwidth = $(window).width(),
     windowheight = $(window).height();
+
+$('.sitebtn').click(function () {
+    $(this).toggleClass('active');
+    $('#togglefoot').toggleClass('open');
+});
+
+$(window).bind('facebookLoaded', function () {
+
+    FB.init({
+        appId: window.FBid, // App ID
+        channelUrl: '//tkab.wd7dev.se/channel.html', // Channel File
+        status: true, // check login status
+        cookie: true, // enable cookies to allow the server to access the session
+        xfbml: true  // parse XFBML
+    });
+
+});
 
 
 shopOpt.customCartRow = function (data, info, t) {
@@ -54,7 +71,8 @@ shopOpt.customCartRow = function (data, info, t) {
         t.find('.cart-artnr').text('Denna resa består av dessa delresor:');
     }*/
     if (data.ProductType == 201) {
-        
+
+        var carttime = $('<div class="cartdate">' + data.Start.format('yyyy-mm-dd') + ' ' + data.Start.format('HH:MM') + ' - ' + data.End.format('HH:MM') + '</div>').appendTo(info);
         var extxt = '';
         var $seat = $('<div class="cart-seat" />').appendTo(info);
         if (data.SeatId > 0) {
@@ -62,11 +80,11 @@ shopOpt.customCartRow = function (data, info, t) {
             $seat.text(extxt);
         }
         //t.find('span.cart-price').remove();
-        
+
         var b = $('<span class="button cart-bookseat" />').text(data.SeatId > 0 ? 'Byt plats' : 'Välj plats').click(function (e) {
             e.stopPropagation();
             ql.load('/js/seat.js', function () {
-                bookseat(data.Id);
+                bookseat(data.OrderId,data.Id);
             });
         }).appendTo($seat);
         if (data.ArticleGroup == 'Enkelbiljett') {
@@ -74,6 +92,7 @@ shopOpt.customCartRow = function (data, info, t) {
                 ar(svcUrl + 'UpdateFlex', { id: data.Id, oid: data.OrderId, flex: !data.Fullflex, trav: '' }, function (d) {
                     wdShop.orderChanged();
                 });
+                e.stopPropagation();
             }).appendTo(info);
         }
     }
@@ -164,7 +183,7 @@ else {
         $(this).children('span').toggle();
     });
 
-    
+
 
     setTimeout(function () {
         $('.wd-cart-prod').on('click', function () {
@@ -271,27 +290,75 @@ $('.searchwrapper ul.tabs li').click(function () {
 });
 
 
+function fb_publish(d) {
+    var stn = station[d.EndStation].n.short();
+    FB.ui(
+      {
+          method: 'stream.publish',
+          message: 'Åker tåg till ' + stn,
+          attachment: {
+              name: 'Åker tåg till ' + stn,
+              caption: 'Tågkompaniets tåg ' + d.TripNr + ': ' + d.Description,
+              description: (
+                'description here'
+              ),
+              href: 'http://www.tagkompaniet.se'
+          },
+          //action_links: [
+          //            { text: 'Code', href: 'action url here' }
+          //],
+          user_prompt_message: 'Personal message here'
+      },
+      function (response) {
+          if (response && response.post_id) {
+              alert('Post was published.');
+
+          } else {
+              //alert('Post was not published.');
+          }
+      }
+    );
+}
+
 
 function openTicket(data) {
     var cnt = $('<div class="ticketview" />').appendTo($('body'));
-    $('<div class="close"></div>').click(function () {
+    ql.postload('/js/stations.js');
+        $('<div class="close"></div>').click(function () {
         $(this).parent().remove();
     }).appendTo(cnt);
     $('<div class="ordernr">Ordernummer: <strong>' + data.OrderId + '</strong></div>').appendTo(cnt);
-    $('<div class="ticketnr text-right">Biljettnummer: <strong>' + data.Id + '</strong></div>').appendTo(cnt);
-    $('<div class="tickettype">' + data.ArticleGroup + '</div>').appendTo(cnt);
-    $('<div>' + data.Title.short() + '</div>').appendTo(cnt);
-
+    $('<div class="ticketnr text-right"><strong>' + data.Code.substring(0,data.Code.length-1) + '</strong></div>').appendTo(cnt);
+    //$('<div>' + data.ArticleGroup + '</div>').appendTo(cnt);
+    $('<div class="tickettype">' + data.Title.short() + '</div>').appendTo(cnt);
+    
+    $('<div class="tickettype">' + data.Description.short() + '</div>').appendTo(cnt);
+    $('<div class="ticketinfo"><span>Namn:</span>&nbsp;<strong>' + data.Traveller + '</strong></div>').appendTo(cnt);
     if (data.ArticleGroup == "Pendlarkort") {
-        $('<div>Pendlarkortets giltighetstid: <strong>' + data.Start.format('yyyy-mm-dd') + ' - ' + data.End.format('yyyy-mm-dd') + '</strong></div>').appendTo(cnt);
+        $('<div class="ticketinfo"><span>Personnummer:</span>&nbsp;<strong>' + data.OrgNr + '</strong></div>').appendTo(cnt);
+        $('<div class="ticketinfo"><span>Giltighetstid:</span>&nbsp;<strong>' + data.Start.format('yyyy-mm-dd') + ' - ' + data.End.format('yyyy-mm-dd') + '</strong></div>').appendTo(cnt);
     }
     else if (data.ArticleGroup == "Partibiljett") {
         $('<div>Antal partibiljetter kvar: <span class="noileft"><strong>' + (data.Noi - data.UsedNoi) + '</strong></span></div>').appendTo(cnt);
     } else {
-        $('<div>Tågnummer:<strong>' + data.TripNr + ', ' + data.Start.format('yyyy-mm-dd') + '</strong></div>').appendTo(cnt);
+        $('<div class="ticketinfo"><span>Tågnummer:</span>&nbsp;<strong>' + data.TripNr + '</strong></div>').appendTo(cnt);
+        $('<div class="ticketinfo"><span>Datum:</span>&nbsp;<strong>' + data.Start.format('yyyy-mm-dd') + '</strong></div>').appendTo(cnt);
+        $('<div class="ticketinfo"><span>Avgång:</span>&nbsp;<strong>' + data.Start.format('HH:MM') + '</strong></div>').appendTo(cnt);
+        $('<div class="ticketinfo"><span>Ankomst:</span>&nbsp;<strong>' + data.End.format('HH:MM') + '</strong></div>').appendTo(cnt);
+        $('<div class="ticketinfo"><span>Din plats:</span>&nbsp;<strong>Vagn:' + data.WagonId + ', Plats:' + data.SeatId + ' </strong></div>').appendTo(cnt);
+        var b = $('<span class="button cart-bookseat" />').text(data.SeatId > 0 ? 'Byt plats' : 'Välj plats').click(function (e) {
+            cnt.remove();
+            e.stopPropagation();
+            ql.load('/js/seat.js', function () {
+                bookseat(data.OrderId, data.Id);
+            });
+        }).appendTo(cnt);
+        if (window.FB) {
+            $('<div class="button postfb fbbutton">Posta på Facebook</div>').click(function () { fb_publish(data); }).appendTo(cnt);
+        }
     }
     if (data.ArticleGroup != "Partibiljett") {
-        $('<a href="http://tkab.se/validate?q=' + data.Id + '"><img src="/gen.img?qr=' + encodeURI('http://tkab.se/validate?q=' + data.Id) + '"></a>').appendTo(cnt);
+        $('<img src="/gen.img?qr=' + encodeURI(data.Code) + '">').appendTo(cnt);
     } else {
         var sbtn = $('<span class="button">Boka biljetter</span>').click(function () {
             icnt.slideToggle();
@@ -352,45 +419,45 @@ function openTicket(data) {
 
 }
 
-var $wrapper = $('#wrapper');
-var lastX = 0;
-var lastMat;
-var bdy = $('body');
+//var $wrapper = $('#wrapper');
+//var lastX = 0;
+//var lastMat;
+//var bdy = $('body');
 
-$('body').bind('tdown', function (e, startpos, starttime, dist, direction) {
-    var lastMat = $wrapper.css("-webkit-transform");
-    lastX = lastMat.split(',')[4] - 0;
-}).bind('tmove', function (e, startpos, starttime, dist, direction) {
-    if (direction == 1) {
-        $wrapper.css("-webkit-transition-duration", "0s");
-        //console.log(lastX, dist.x);
-        var value = lastX + dist.x;
+//$('body').bind('tdown', function (e, startpos, starttime, dist, direction) {
+//    var lastMat = $wrapper.css("-webkit-transform");
+//    lastX = lastMat.split(',')[4] - 0;
+//}).bind('tmove', function (e, startpos, starttime, dist, direction) {
+//    if (direction == 1) {
+//        $wrapper.css("-webkit-transition-duration", "0s");
+//        //console.log(lastX, dist.x);
+//        var value = lastX + dist.x;
 
 
-        if (value > 0 && value < 30) {
+//        if (value > 0 && value < 30) {
 
-            bdy.addClass('menuopen').removeClass('cartopen');
+//            bdy.addClass('menuopen').removeClass('cartopen');
 
-        } else if (value < 0 && value > -30) {
+//        } else if (value < 0 && value > -30) {
 
-            bdy.addClass('cartopen').removeClass('menuopen');
+//            bdy.addClass('cartopen').removeClass('menuopen');
 
-        }
+//        }
 
-        $wrapper.css("-webkit-transform", "matrix(1, 0, 0, 1, " + value + ", 0) ");
-    }
-    //console.log('move');
-}).bind('tend', function (e, startpos, starttime, dist, direction) {
-    //console.log('end');
-    if (direction == 1) {
-        $wrapper.css("-webkit-transition-duration", "0.3s").css("-webkit-transform", "");
-        //console.log(dist);
-        if (Math.abs(dist.x) > 40) {
-            if (lastX != 0)
-                $('body').removeClass('menuopen').removeClass('cartopen');
-        }
-    }
-});
+//        $wrapper.css("-webkit-transform", "matrix(1, 0, 0, 1, " + value + ", 0) ");
+//    }
+//    //console.log('move');
+//}).bind('tend', function (e, startpos, starttime, dist, direction) {
+//    //console.log('end');
+//    if (direction == 1) {
+//        $wrapper.css("-webkit-transition-duration", "0.3s").css("-webkit-transform", "");
+//        //console.log(dist);
+//        if (Math.abs(dist.x) > 40) {
+//            if (lastX != 0)
+//                $('body').removeClass('menuopen').removeClass('cartopen');
+//        }
+//    }
+//});
 
 
 function activateTicket(trip) {
@@ -403,9 +470,9 @@ function activateTicket(trip) {
 
 function enumTickets(arr, cnt) {
     if (arr && arr.length) {
-        $.each(arr, function(i, v) {
+        $.each(arr, function (i, v) {
             console.log(v);
-            var t = $('<li class="cf" />').data('data', v).click(function() {
+            var t = $('<li class="cf" />').data('data', v).click(function () {
                 openTicket(v);
             }).appendTo(cnt).append('<span class="desc">' + v.Title.short() + '<br/>' + (v.Description || '').short() + '</span>');
             if (v.ArticleGroup == "Pendlarkort") {
@@ -438,100 +505,104 @@ function updateTickets() {
     });
 }
 
-(function() {
-    var isdown = false;
-    
-    var startpos, starttime;
-    var elm;
-    var isdragging;
-    var mindist = 5;
-    var direction;
-    var lastDist;
-    var bdy = document.body;
+//(function () {
+//    var isdown = false;
 
-    function getPos(e) {
-        if (e.changedTouches)
-            e = e.changedTouches[e.changedTouches.length - 1];
-        return { x: e.pageX, y: e.pageY };
-    }
-    function tstart(e) {
+//    var startpos, starttime;
+//    var elm;
+//    var isdragging;
+//    var mindist = 5;
+//    var direction;
+//    var lastDist;
+//    var bdy = document.body;
 
-        elm = $(e.srcElement);
-        isdown = true;
-        startpos = getPos(e);
-        starttime = new Date();
-    }
-    function tmove(e) {
+//    function getPos(e) {
+//        if (e.changedTouches)
+//            e = e.changedTouches[e.changedTouches.length - 1];
+//        return { x: e.pageX, y: e.pageY };
+//    }
+//    function tstart(e) {
 
-
-
-        if (isdown) {
+//        elm = $(e.srcElement);
+//        isdown = true;
+//        startpos = getPos(e);
+//        starttime = new Date();
+//    }
+//    function tmove(e) {
 
 
-            
+
+//        if (isdown) {
 
 
-            var newpos = getPos(e);
 
-            var dist = lastDist = { x: newpos.x - startpos.x, y: newpos.y - startpos.y };
-            if (!isdragging) {
 
-                var ax = Math.abs(dist.x);
-                var ay = Math.abs(dist.y);
-                if (ax > mindist || ay > mindist) {
-                    isdragging = true;
-                    direction = ax > ay;
-                }
-                if (elm)
-                    elm.trigger('tdown', [startpos, starttime, dist, direction, elm]);
-            } else {
-                if (direction == 1)
-                    e.preventDefault();
-                if (elm)
-                    elm.trigger('tmove', [startpos, starttime, dist, direction, elm]);
-            }
 
-        }
-    }
-    function tend(e) {
-        if (isdown) {
+//            var newpos = getPos(e);
 
-            elm.trigger('tend', [startpos, starttime, lastDist, direction, elm, getPos(e)]);
-            isdragging = false;
-        }
-        if (isdragging) {
-            if (e.type == 'touchend')
-                e.preventDefault();
-            e.stopPropagation();
+//            var dist = lastDist = { x: newpos.x - startpos.x, y: newpos.y - startpos.y };
+//            if (!isdragging) {
 
-        }
-        elm = null;
-        isdown = false;
-        
-    }
-    bdy.addEventListener('touchstart', tstart, false);
-    bdy.addEventListener('touchmove', tmove, false);
-    bdy.addEventListener('touchend', tend, false);
-})();
+//                var ax = Math.abs(dist.x);
+//                var ay = Math.abs(dist.y);
+//                if (ax > mindist || ay > mindist) {
+//                    isdragging = true;
+//                    direction = ax > ay;
+//                }
+//                if (elm)
+//                    elm.trigger('tdown', [startpos, starttime, dist, direction, elm]);
+//            } else {
+//                if (direction == 1)
+//                    e.preventDefault();
+//                if (elm)
+//                    elm.trigger('tmove', [startpos, starttime, dist, direction, elm]);
+//            }
 
-updateTickets();
+//        }
+//    }
+//    function tend(e) {
+//        if (isdown) {
+
+//            elm.trigger('tend', [startpos, starttime, lastDist, direction, elm, getPos(e)]);
+//            isdragging = false;
+//        }
+//        if (isdragging) {
+//            if (e.type == 'touchend')
+//                e.preventDefault();
+//            e.stopPropagation();
+
+//        }
+//        elm = null;
+//        isdown = false;
+
+//    }
+//    bdy.addEventListener('touchstart', tstart, false);
+//    bdy.addEventListener('touchmove', tmove, false);
+//    bdy.addEventListener('touchend', tend, false);
+//})();
+
+setTimeout(function() {
+    updateTickets();
+    $('#pageload').fadeOut();
+}, 200);
+
 
 function checkClose() {
-    
-        
-        
-        
-        
-        setTimeout(function () {
-            
-                if (!$('#loginpop').is(":hover"))
-                    $('#loginpop').removeClass('active');
-                else
-                    checkClose();
-            
-        }, 6000);
-        
-    
+
+
+
+
+
+    setTimeout(function () {
+
+        if (!$('#loginpop').is(":hover"))
+            $('#loginpop').removeClass('active');
+        else
+            checkClose();
+
+    }, 6000);
+
+
 }
 if (!window.wdGlobal) {
     setTimeout(function () {
@@ -542,7 +613,7 @@ if (!window.wdGlobal) {
         if (!cid) {
             $('#loginpop').addClass('active');
             checkClose();
-            
+
         }
     }, 3000);
 }
@@ -550,4 +621,9 @@ if (!window.wdGlobal) {
 $('#loginpop .button').click(function () {
     $('#ctl00_Login1').click();
 });
+
+setTimeout(function() {
+    loadFB();
+}, 600);
+
 fd('base.js');
