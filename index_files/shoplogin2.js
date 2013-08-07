@@ -6,7 +6,7 @@ $.shopLogin2 = function(opt, t) {
     }, opt || { }),
         il = opt.parent || $('<div id="ilogin" class="row cf" style="opacity:0" />'),
         lt, lastActive, fbauth,
-        u = '/Core.WebShop,Core.WebShop.ShopCommon.asmx/';
+        u = 'http://tkab.wd7dev.se/Core.WebShop,Core.WebShop.ShopCommon.asmx/';
 
     if (window.FB) {
         FB.Event.subscribe('auth.authResponseChange', function (response) {      
