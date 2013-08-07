@@ -570,7 +570,7 @@ var wdpid=4;var wdlang=1;
 </script><script src="./index_files/wdbase.js" type="text/javascript"></script><script src="./index_files/pp_wdshp.js" type="text/javascript"></script><script src="./index_files/base.js" type="text/javascript"></script><script src="./index_files/stations.js" type="text/javascript"></script><script src="./index_files/jquery.timepicker.min.js" type="text/javascript"></script><script src="./index_files/bookingbase.js" type="text/javascript"></script><script src="./index_files/shoplogin2.js" type="text/javascript"></script><script src="./index_files/all.js" type="text/javascript"></script>
 
 <script type="text/javascript">
-
+document.addEventListener('deviceready', function() {
 	 $('#ctl00_Login1').shopLogin2({loggedInTextFormat:'Mina sidor',loggedOutText:'Logga in',loggedInLink:'/minasidor',hideRegister:false,autoLogin:false });$('#ctl00_exCart').cart({overview:false,newitemdelay:1500,imgw:80,noi:4,imgh:90,checkoutUrl:'/checkout',itemsInCartText:'{0}st artiklar, {1}',cartEmptyText:'Inga artiklar' });
 $('.expheader').on("click", function () {
 if ($(this).hasClass('active')) {
@@ -584,6 +584,7 @@ $(this).addClass('active');
 $(this).next('div').addClass('slide');
 }
 });
+},false);
 
 </script>
 
