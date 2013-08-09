@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0022)http://tkab.wd7dev.se/ -->
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="sv" lang="sv" xmlns:fb="http://ogp.me/ns/fb#"><head id="ctl00_Head1"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="generator" content="Cavagent CMS 8.0"><script type="text/javascript">window.wdRoot='//wd7.se'</script><meta name="description" content="Sök resa"><script src="./index_files/ql2.js" type="text/javascript"></script><style type="text/css"></style><title>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="sv" lang="sv" xmlns:fb="http://ogp.me/ns/fb#"><head id="ctl00_Head1"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="description" content="Sök resa"><script src="./index_files/ql2.js" type="text/javascript"></script><title>
 Tågkompaniet - Sök tågresa
 </title><link rel="shortcut icon" href="http://tkab.wd7dev.se/favicon.ico"><meta name="viewport" content="width=device-width, initial-scale = 1.0, maximum-scale=1.0, user-scalable=no"><link rel="stylesheet" type="text/css" href="./index_files/style.min.css">
 <body><div id="scrolltop" class="ani">
@@ -544,21 +543,25 @@ dfsdfgsdfgsdfgdfsgsdfg sdfg sdfg sdfg sdfgd sfg</p>
 //<![CDATA[
 var wdpid=4;var wdlang=1; 
 
-$('.expheader').on("click", function () {
-if ($(this).hasClass('active')) {
-$(this).removeClass('active');
-$(this).next('.exp').removeClass('slide');
-}
-else {
-$(this).parent().parent().find('.exp').removeClass('slide');
-$('.expheader').removeClass('active');
-$(this).addClass('active');
-$(this).next('div').addClass('slide');
-}
-});
-});
 
-$('#ctl00_Login1').shopLogin2({loggedInTextFormat:'Mina sidor',loggedOutText:'Logga in',loggedInLink:'/minasidor',hideRegister:false,autoLogin:false });$('#ctl00_exCart').cart({overview:false,newitemdelay:1500,imgw:80,noi:4,imgh:90,checkoutUrl:'/checkout',itemsInCartText:'{0}st artiklar, {1}',cartEmptyText:'Inga artiklar' }); 
+	document.addEventListener('deviceready', function() {
+		$('#ctl00_Login1').shopLogin2({loggedInTextFormat:'Mina sidor',loggedOutText:'Logga in',loggedInLink:'/minasidor',hideRegister:false,autoLogin:false });
+		$('#ctl00_exCart').cart({overview:false,newitemdelay:1500,imgw:80,noi:4,imgh:90,checkoutUrl:'/checkout',itemsInCartText:'{0}st artiklar, {1}',cartEmptyText:'Inga artiklar' });
+		$('.expheader').on("click", function () {
+		if ($(this).hasClass('active')) {
+			$(this).removeClass('active');
+			$(this).next('.exp').removeClass('slide');
+		}
+		else {
+			$(this).parent().parent().find('.exp').removeClass('slide');
+			$('.expheader').removeClass('active');
+			$(this).addClass('active');
+			$(this).next('div').addClass('slide');
+		}
+	
+},false);
+
+
 //]]>
 </script>
 </body></html>

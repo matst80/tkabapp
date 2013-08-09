@@ -42,7 +42,7 @@ Number.prototype.timeSpan = function () {
     return minutes + 'm';
 };
 
-var svcUrl = '/tripfinder.asmx/',
+var svcUrl = 'http://tkab.wd7dev.se/tripfinder.asmx/',
     windowwidth = $(window).width(),
     windowheight = $(window).height();
 
