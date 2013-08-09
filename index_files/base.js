@@ -42,27 +42,26 @@ Number.prototype.timeSpan = function () {
     return minutes + 'm';
 };
 
-var svcUrl = 'http://tkab.wd7dev.se/tripfinder.asmx/',
+var svcUrl = '/tripfinder.asmx/',
     windowwidth = $(window).width(),
     windowheight = $(window).height();
 
+$('.sitebtn').click(function () {
+    $(this).toggleClass('active');
+    $('#togglefoot').toggleClass('open');
+});
 
+$(window).bind('facebookLoaded', function () {
 
-
-
-
-//$(window).bind('facebookLoaded', function () {
-
-    /*FB.init({
+    FB.init({
         appId: window.FBid, // App ID
         channelUrl: '//tkab.wd7dev.se/channel.html', // Channel File
         status: true, // check login status
         cookie: true, // enable cookies to allow the server to access the session
         xfbml: true  // parse XFBML
     });
-*/
 
-//});
+});
 
 
 shopOpt.customCartRow = function (data, info, t) {
@@ -99,21 +98,13 @@ shopOpt.customCartRow = function (data, info, t) {
     }
 };
 
- document.addEventListener('deviceready', function() {
-FB.init({ appId: "133914256793487", nativeInterface: CDV.FB, useCachedDialogs: false });
-$('.sitebtn').click(function () {
-    $(this).toggleClass('active');
-    $('#togglefoot').toggleClass('open');
-});
-
-
 $(window).resize(function () {
     windowwidth = $(window).width();
     windowheight = $(window).height();
 });
 if (windowwidth > 767) {
     shopOpt.dontCloseCartOnClick = 0;
-    //console.log(windowwidth);
+    console.log(windowwidth);
     var lastPos = 0;
     //var isScrolling = false;
     var scrollT;
@@ -219,9 +210,48 @@ $('input#travelback').change(function () {
     //else
     //    $('.returnwrap').slideUp();
 });
+//$('#mtravelback input').click(function () {
+//    if ($(this)) {
+//        $(this).toggleClass('active');
+//        $('.returnwrap').slideDown();
+//        var checkBox = $('input#mtravelback');
+//        checkBox.prop('checked', !checkBox.prop('checked'));
+//        setMobileReturnDate(new Date());
+//    }
+//    else
+//        $('.returnwrap').slideUp();
+
+//});
+function setButtonHeight() {
+    //var searchHeight = $('.fromto').outerHeight();
+    //searchHeight += $('.white').outerHeight();
+    var searchHeight = 0;
+    $('.middlesearch .measure').each(function () {
+        searchHeight += $(this).outerHeight();
+    });
+    $('.searchbox').css('height', searchHeight);
+}
 setButtonHeight();
 $('.middlesearch ul.tabs li').click(function () {
     setButtonHeight();
+});
+/*
+$('.addtraveler').click(function () {
+    var row = $(this).prev().find('div.travelerrow').first().clone(true);
+    $($('<input type="text" placeholder="Namn" />')).appendTo(row);
+    $('<span class="delrow" />').appendTo(row);
+    $(row).insertAfter($(this).prev().find('div.travelerrow').last());
+    row.find('ul').children('li').removeClass('selected');
+    row.find('ul li').eq(0).addClass('selected');
+    setButtonHeight();
+});
+*/
+
+$(window).bind('orderUpdated', function (e,order, newItems, extr) {
+    
+    $('#cnoi').text(order.items.length).toggle(order.items.length > 0);
+    
+        
 });
 
 setTimeout(function () {
@@ -265,42 +295,6 @@ activetab();
 $('.searchwrapper ul.tabs li').click(function () {
     activetab();
 });
-
-},false);
-//$('#mtravelback input').click(function () {
-//    if ($(this)) {
-//        $(this).toggleClass('active');
-//        $('.returnwrap').slideDown();
-//        var checkBox = $('input#mtravelback');
-//        checkBox.prop('checked', !checkBox.prop('checked'));
-//        setMobileReturnDate(new Date());
-//    }
-//    else
-//        $('.returnwrap').slideUp();
-
-//});
-function setButtonHeight() {
-    //var searchHeight = $('.fromto').outerHeight();
-    //searchHeight += $('.white').outerHeight();
-    var searchHeight = 0;
-    $('.middlesearch .measure').each(function () {
-        searchHeight += $(this).outerHeight();
-    });
-    $('.searchbox').css('height', searchHeight);
-}
-
-/*
-$('.addtraveler').click(function () {
-    var row = $(this).prev().find('div.travelerrow').first().clone(true);
-    $($('<input type="text" placeholder="Namn" />')).appendTo(row);
-    $('<span class="delrow" />').appendTo(row);
-    $(row).insertAfter($(this).prev().find('div.travelerrow').last());
-    row.find('ul').children('li').removeClass('selected');
-    row.find('ul li').eq(0).addClass('selected');
-    setButtonHeight();
-});
-*/
-
 
 
 function fb_publish(d) {
@@ -509,15 +503,57 @@ function enumTickets(arr, cnt) {
 
 function updateTickets() {
     ar(svcUrl + 'MyTickets', {}, function (d) {
-
-        enumTickets(d.Single, $('ul.yourticket').empty());
-        enumTickets(d.Multi, $('ul.yourmultiticket').empty());
-        enumTickets(d.Commuter, $('ul.yourcommuter').empty());
-        enumTickets(d.NoStartCommuter, $('ul.upcomingcommuter').empty());
-
+        if (d.IsLoggedIn) {
+            $('.mytickets').show();
+            enumTickets(d.Single, $('ul.yourticket').empty());
+            enumTickets(d.Multi, $('ul.yourmultiticket').empty());
+            enumTickets(d.Commuter, $('ul.yourcommuter').empty());
+            enumTickets(d.NoStartCommuter, $('ul.upcomingcommuter').empty());
+        }
+        else
+            $('.mytickets').hide();
     });
 }
 
+if (windowwidth < 768) {
+    var bdy = $('body'), startpos;
+    
+    $('#scrolltop').prependTo(bdy).addClass('ani');
+
+    function getPos(e) {
+        if (e.changedTouches)
+            e = e.changedTouches[e.changedTouches.length - 1];
+        return { x: e.pageX, y: e.pageY };
+    }
+
+   
+    bdy[0].addEventListener('touchstart', function(e) {
+        if (bdy.hasClass('menuopen') || bdy.hasClass('cartopen')) {
+            startpos = getPos(e);
+            //console.log('start', startpos);
+        }
+    }, false);
+    bdy[0].addEventListener('touchmove', function (e) {
+        if (bdy.hasClass('menuopen') || bdy.hasClass('cartopen')) {
+            if (startpos) {
+
+                var endp = getPos(e);
+                //console.log('end', endp);
+                var diff = { x: startpos.x - endp.x, y: startpos.y - endp.y };
+                //console.log('diff');
+                startpos = null;
+                if (Math.abs(diff.x) > Math.abs(diff.y)) {
+                    e.stopPropagation();
+                    if (diff.x > 0) {
+                        bdy.removeClass('menuopen');
+                    } else
+                        bdy.removeClass('cartopen');
+                }
+            }
+        }
+    }, false);
+    
+}
 //(function () {
 //    var isdown = false;
 
@@ -635,6 +671,8 @@ $('#loginpop .button').click(function () {
     $('#ctl00_Login1').click();
 });
 
-
+setTimeout(function() {
+    loadFB();
+}, 1000);
 
 fd('base.js');

@@ -29,14 +29,16 @@ var map,
     returndate = new Date(),
     commuterdate = new Date(),
     startTime = date.inmin(),
-    usegmap = $(window).width() > 768,
+    
     monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'],
     dayNames = ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag'],
     returnTime = date.inmin();
 
 if (lastdata && lastdata.to) {
-    $to.data('station-id', lastdata.to).val(station[lastdata.to].n);
-    $from.data('station-id', lastdata.from).val(station[lastdata.from].n);
+    var ss = station[lastdata.to];
+    var es = station[lastdata.from];
+    $to.data('station-id', lastdata.to).val(windowwidth < 768 ? ss.n.short() : ss.n);
+    $from.data('station-id', lastdata.from).val(windowwidth < 768 ? es.n.short() : es.n);
 }
 
 function GetPrice(trip, travellers) {
@@ -142,7 +144,9 @@ function appendTrip(t, tc) {
         mtime = 0,
         cnt = $('<div class="trip flipparent cf" />').data('data', t).bind('maxtime', function (e, time) {
             var percent = t.TotalTime.TotalMinutes / time;
-
+            if (windowwidth < 758 && t.subTrips.length > 2)
+                totalline.css('width', '450px');
+            else
             totalline.css('width', (percent * 90) + '%');
 
         }).click(function (e) {
@@ -550,7 +554,7 @@ function getDist(x, y, x2, y2) {
 }
 
 if (navigator.geolocation) {
-    if (windowwidth<768 || (!lastdata || !lastdata.from))
+    if ((!lastdata || !lastdata.from)) //windowwidth<768 || 
         navigator.geolocation.getCurrentPosition(function (d) {
 
             var x2 = d.coords.longitude,
@@ -565,11 +569,11 @@ if (navigator.geolocation) {
             dist = dist.sort(function (a, b) {
                 return a.dist - b.dist;
             });
-
+            /*
             $from.data('station-id', dist[0].id).val(dist[0].n);
             if (lastdata || lastdata.to) {
                 findtrip(true, false);
-            }
+            }*/
         });
 }
 
@@ -844,7 +848,7 @@ $('#settime').on('click', function () {
     if ($(this).hasClass('notnative')) {
         $triptime.timepicker('show');
     } else {
-        $triptime.click().focus();
+        $triptime.focus();
     }
 });
 
@@ -855,7 +859,7 @@ $('#setreturntime').on('click', function () {
         $returntime.timepicker('show');
     }
     else
-        $returntime.click().focus();
+        $returntime.focus();
 });
 
 function getTime(v) {
@@ -913,7 +917,7 @@ $tripday.weeksel({
         setDate($('.mobiledate'), date);
         $when.val(date.format('yyyy-mm-dd')).change();
         //$('#when').val('setDate', date);
-        findtrip(true, false);
+        //findtrip(true, false);
     }
 });
 $returnday.weeksel({
@@ -923,7 +927,7 @@ $returnday.weeksel({
         setDate($('.showdate'), returndate);
         //$('#whento').datepicker('setDate', returndate);
         $return.val(returndate.format('yyyy-mm-dd')).change();
-        findtrip(false, true);
+        //findtrip(false, true);
     }
 });
 
@@ -942,14 +946,28 @@ if ($when.hasClass('notnative')) {
         }*/
     });
 }
+
+var issafari = navigator.userAgent.toLowerCase().indexOf('safari/') > -1;
+
+function getDate(v) {
+    
+    var p = v.split('-');
+    return new Date(p[0], p[1]-1, p[2]);
+    
+    
+}
+
 $when.change(function () {
-    date = new Date($(this).val());
+    
+    
+    date = getDate($(this).val());
+    
     setDate($('.mobiledate'), date);
     $tripday.trigger('changeday', [date]);
 
     if (returndate < date) {
         $return.val(date.format('yyyy-mm-dd')).change();
-    }
+    }total
     findtrip(true, false);
 });
 
@@ -960,7 +978,7 @@ if ($('#comstartdate').hasClass('notnative')) {
         maxDate: '+6M'
     });
 }
-$('#comstartdate').change(function() {
+$('#comstartdate').val(new Date().format('yyyy-mm-dd')).change(function() {
     commuterdate = new Date($(this).val());
 });
 
@@ -972,7 +990,10 @@ if ($return.hasClass('notnative')) {
     });
 }
 $return.change(function () {
-    returndate = new Date($(this).val());
+    
+    
+    returndate = date = getDate($(this).val());
+    
     setDate($('.returnwrap'), returndate);
     $returnday.trigger('changeday', [returndate]);
     if (returndate < date) {
@@ -1030,6 +1051,8 @@ $('.switchtype span').click(function () {
     $(this).parent().children('span').removeClass('active');
     $(this).addClass('active');
 });
+
+var usegmap = $(window).width() > 768;
 
 if (usegmap) {
     var styles = [
